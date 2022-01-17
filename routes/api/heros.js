@@ -3,6 +3,13 @@ const router = express.Router();
 const fs = require("fs/promises");
 const path = require("path");
 const multer = require("multer");
+var cloudinary = require("cloudinary").v2;
+cloudinary.config({
+  cloud_name: "https-yuliagordienko-github-io-superheros-front-end",
+  api_key: "161691791197684",
+  api_secret: "2l1u-FRh-JlnpfYxa3WlmJtdBHA",
+  secure: true,
+});
 const { controllerWrapper } = require("../../middlewares");
 const { Hero } = require("../../modelSchema");
 const { heros: ctrl } = require("../../controllers");
@@ -36,14 +43,20 @@ router.post(
     const resultUpload = path.join(herosDir, originalname);
     try {
       await fs.rename(tempUpload, resultUpload);
-      const src = path.join("/fotos", originalname);
-      const newHero = await Hero.create({
-        ...req.body,
-        images: src,
-      });
-      heros.push(newHero);
-      res.status(201).json({
-        newHero,
+
+      cloudinary.uploader.upload(resultUpload, async function (error, result) {
+        // console.log(result);
+        const src = result.url;
+        const fotoName = result.public_id;
+        const newHero = await Hero.create({
+          ...req.body,
+          images: src,
+        });
+
+        heros.push(newHero);
+        res.status(201).json({
+          newHero,
+        });
       });
     } catch (error) {
       await fs.unlink(tempUpload);
@@ -56,5 +69,4 @@ router.delete("/:id", ctrl.remove);
 
 router.put("/:id", controllerWrapper(ctrl.update));
 
-// router.patch("/:id/:favorite", controllerWrapper(ctrl.updateStatus));
 module.exports = router;
