@@ -3,7 +3,6 @@ const logger = require("morgan");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const herosRouter = require("./routes/api/heros");
-
 const app = express();
 
 const formatsLogger = app.get("env") === "development" ? "dev" : "short";
@@ -11,6 +10,7 @@ dotenv.config();
 app.use(logger(formatsLogger));
 app.use(cors());
 app.use(express.json());
+app.use(express.static("public"));
 
 app.use("/api/heros", herosRouter);
 app.use((req, res) => {
